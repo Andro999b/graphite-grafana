@@ -1,4 +1,4 @@
-FROM     ubuntu:14.04
+FROM 	phusion/baseimage:0.9.15
 
 # ---------------- #
 #   Installation   #
@@ -11,7 +11,7 @@ RUN     apt-get -y install software-properties-common
 RUN     add-apt-repository -y ppa:chris-lea/node.js
 RUN     apt-get -y update
 RUN     apt-get -y install python-django-tagging python-simplejson python-memcache python-ldap python-cairo python-pysqlite2 python-support \
-                           python-pip gunicorn supervisor nginx-light nodejs git wget curl openjdk-7-jre build-essential python-dev
+                           python-pip gunicorn supervisor nginx-light nodejs git wget curl build-essential python-dev
 
 RUN     pip install Twisted==11.1.0
 RUN     pip install Django==1.5
@@ -36,12 +36,6 @@ RUN     git clone https://github.com/graphite-project/graphite-web.git /src/grap
         git checkout 0.9.x                                                                &&\
         python setup.py install
 
-# Install StatsD
-RUN     git clone https://github.com/etsy/statsd.git /src/statsd                                                                        &&\
-        cd /src/statsd                                                                                                                  &&\
-        git checkout v0.7.2
-
-
 # Install Grafana
 RUN     mkdir /src/grafana                                                                                    &&\
         mkdir /opt/grafana                                                                                    &&\
@@ -53,9 +47,6 @@ RUN     mkdir /src/grafana                                                      
 # ----------------- #
 #   Configuration   #
 # ----------------- #
-
-# Confiure StatsD
-ADD     ./statsd/config.js /src/statsd/config.js
 
 # Configure Whisper, Carbon and Graphite-Web
 ADD     ./graphite/initial_data.json /opt/graphite/webapp/graphite/initial_data.json
@@ -75,7 +66,7 @@ ADD     ./grafana/custom.ini /opt/grafana/conf/custom.ini
 
 # Add the default dashboards
 RUN     mkdir /src/dashboards
-ADD     ./grafana/dashboards/* /src/dashboards/
+COPY     ./grafana/dashboards/ /src/dashboards/
 RUN     mkdir /src/dashboard-loader
 ADD     ./grafana/dashboard-loader/dashboard-loader.js /src/dashboard-loader/
 
@@ -91,12 +82,12 @@ ADD     ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 # Grafana
 EXPOSE  80
 
-# StatsD UDP port
-EXPOSE  8125/udp
+# Graphite
+EXPOSE  81
 
-# StatsD Management port
-EXPOSE  8126
-
+#carbon
+EXPOSE  2003
+EXPOSE  2004
 
 
 # -------- #
